@@ -1557,40 +1557,23 @@ tensorflow::Status ConvertPool(Converter& ctx,
   return tensorflow::Status::OK();
 }
 
-// TODO(ab) figure out the best way to reuse this code in c++
-tensorflow::Status ConvertRelu(
+tensorflow::Status ConvertActivation(
     Converter& ctx, const tensorflow::NodeDef& node_def,
     const std::vector<TRT_TensorOrWeights>& inputs,
     std::vector<TRT_TensorOrWeights>* outputs) {
   const nvinfer1::ITensor* tensor = inputs.at(0).tensor();
+  if (node_def.op() == "Relu") {
+    type = nvinfer1::ActivationType::kRELU
+  } else if (node_def.op() == "Tanh") {
+    type = nvinfer1::ActivationType::kTANH
+  } else if (node_def.op() == "Sigmoid") {
+    type = nvinfer1::PoolingType::kSIGMOID;
+  } else {
+    return tensorflow::errors::Unimplemented("Unsupported activation type: ",
+                                             node_def.op());
+  }
   nvinfer1::IActivationLayer* layer = ctx.network()->addActivation(
-      *const_cast<nvinfer1::ITensor*>(tensor), nvinfer1::ActivationType::kRELU);
-  TFTRT_RETURN_ERROR_IF_NULLPTR(layer, node_def.name());
-  nvinfer1::ITensor* output_tensor = layer->getOutput(0);
-  outputs->push_back(TRT_TensorOrWeights(output_tensor));
-  return tensorflow::Status::OK();
-}
-
-tensorflow::Status ConvertTanh(
-    Converter& ctx, const tensorflow::NodeDef& node_def,
-    const std::vector<TRT_TensorOrWeights>& inputs,
-    std::vector<TRT_TensorOrWeights>* outputs) {
-  const nvinfer1::ITensor* tensor = inputs.at(0).tensor();
-  nvinfer1::IActivationLayer* layer = ctx.network()->addActivation(
-      *const_cast<nvinfer1::ITensor*>(tensor), nvinfer1::ActivationType::kTANH);
-  TFTRT_RETURN_ERROR_IF_NULLPTR(layer, node_def.name());
-  nvinfer1::ITensor* output_tensor = layer->getOutput(0);
-  outputs->push_back(TRT_TensorOrWeights(output_tensor));
-  return tensorflow::Status::OK();
-}
-
-tensorflow::Status ConvertSigmoid(
-    Converter& ctx, const tensorflow::NodeDef& node_def,
-    const std::vector<TRT_TensorOrWeights>& inputs,
-    std::vector<TRT_TensorOrWeights>* outputs) {
-  const nvinfer1::ITensor* tensor = inputs.at(0).tensor();
-  nvinfer1::IActivationLayer* layer = ctx.network()->addActivation(
-      *const_cast<nvinfer1::ITensor*>(tensor), nvinfer1::ActivationType::kSIGMOID);
+      *const_cast<nvinfer1::ITensor*>(tensor), type);
   TFTRT_RETURN_ERROR_IF_NULLPTR(layer, node_def.name());
   nvinfer1::ITensor* output_tensor = layer->getOutput(0);
   outputs->push_back(TRT_TensorOrWeights(output_tensor));
@@ -2657,9 +2640,9 @@ void Converter::register_op_converters() {
   // vgg_16 slim implementation
   op_registry_["Conv2D"] = ConvertConv2D;
   op_registry_["DepthwiseConv2dNative"] = ConvertConv2DDepthwise;
-  op_registry_["Relu"] = ConvertRelu;
-  op_registry_["Tanh"] = ConvertTanh;
-  op_registry_["Sigmoid"] = ConvertSigmoid;
+  op_registry_["Relu"] = ConvertActivation;
+  op_registry_["Tanh"] = ConvertActivation;
+  op_registry_["Sigmoid"] = ConvertActivation;
   op_registry_["MaxPool"] = ConvertPool;
   op_registry_["AvgPool"] = ConvertPool;
   op_registry_["BiasAdd"] = ConvertScale;
