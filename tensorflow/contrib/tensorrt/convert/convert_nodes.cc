@@ -1562,12 +1562,15 @@ tensorflow::Status ConvertActivation(
     const std::vector<TRT_TensorOrWeights>& inputs,
     std::vector<TRT_TensorOrWeights>* outputs) {
   const nvinfer1::ITensor* tensor = inputs.at(0).tensor();
+  nvinfer1::ActivationType type;
   if (node_def.op() == "Relu") {
-    type = nvinfer1::ActivationType::kRELU
+    type = nvinfer1::ActivationType::kRELU;
   } else if (node_def.op() == "Tanh") {
-    type = nvinfer1::ActivationType::kTANH
+    type = nvinfer1::ActivationType::kTANH;
+    VLOG(0) << "using tanh";
   } else if (node_def.op() == "Sigmoid") {
-    type = nvinfer1::PoolingType::kSIGMOID;
+    type = nvinfer1::ActivationType::kSIGMOID;
+    VLOG(0) << "using sigmoid";
   } else {
     return tensorflow::errors::Unimplemented("Unsupported activation type: ",
                                              node_def.op());

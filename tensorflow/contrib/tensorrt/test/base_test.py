@@ -59,7 +59,7 @@ class SimpleSingleEngineTest(trt_test.TfTrtIntegrationTestBase):
         bias = constant_op.constant(
             [4., 1.5, 2., 3., 5., 7.], name="bias", dtype=dtype)
         added = nn.bias_add(conv, bias, name="bias_add")
-        relu = nn.relu(added, "relu")
+        relu = nn.sigmoid(added, "relu")
         identity = array_ops.identity(relu, "identity")
         pool = nn_ops.max_pool(
             identity, [1, 2, 2, 1], [1, 2, 2, 1], "VALID", name="max_pool")

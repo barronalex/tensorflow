@@ -72,6 +72,8 @@ def create_inference_graph(input_graph_def,
     RuntimeError: if the returned status message is malformed.
   """
   supported_precision_modes = {"FP32": 0, "FP16": 1, "INT8": 2}
+  if isinstance(precision_mode, bytes):
+    precision_mode = precision_mode.decode('utf-8')
   if precision_mode.upper() not in supported_precision_modes:
     raise ValueError(("precision mode '{}' is not supported."
                       "It should be one of {}").format(
