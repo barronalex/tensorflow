@@ -536,6 +536,7 @@ tf_cc_shared_object(
         "//tensorflow/c:version_script.lds",
         "//tensorflow/c/eager:c_api",
         "//tensorflow/core:tensorflow",
+        "//tensorflow/contrib/tensorrt:trt_engine_op_kernel_cc",
     ],
 )
 
