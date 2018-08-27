@@ -75,35 +75,6 @@ tf_cuda_library(
 )
 
 cc_library(
-    name = "trt_engine_op_kernel_cc",
-    srcs = [
-        "kernels/trt_calib_op.cc",
-        "kernels/trt_engine_op.cc",
-        "ops/trt_calib_op.cc",
-        "ops/trt_engine_op.cc",
-        "shape_fn/trt_shfn.cc",
-    ],
-    hdrs = [
-        "kernels/trt_calib_op.h",
-        "kernels/trt_engine_op.h",
-        "shape_fn/trt_shfn.h",
-    ],
-    copts = tf_copts(),
-    visibility = ["//visibility:public"],
-    deps = [
-        ":trt_logging",
-        ":trt_plugins",
-        ":trt_resources",
-        "//tensorflow/core:gpu_headers_lib",
-        "//tensorflow/core:lib_proto_parsing",
-        "//tensorflow/core:stream_executor_headers_lib",
-    ] + if_tensorrt([
-        "@local_config_tensorrt//:nv_infer",
-    ]) + tf_custom_op_library_additional_deps(),
-    alwayslink = 1,  # buildozer: disable=alwayslink-with-hdrs
-)
-
-cc_library(
     name = "trt_engine_op_kernel",
     srcs = [
         "kernels/trt_engine_op.cc",
