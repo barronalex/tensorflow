@@ -78,6 +78,7 @@ cc_library(
     name = "trt_engine_op_kernel",
     srcs = [
         "kernels/trt_engine_op.cc",
+        "ops/trt_engine_op.cc",
     ],
     hdrs = [
         "kernels/trt_engine_op.h",
@@ -92,6 +93,7 @@ cc_library(
         ":trt_plugins",
         ":trt_resources",
         ":utils",
+        ":trt_shape_function",
         "//tensorflow/core:gpu_headers_lib",
         "//tensorflow/core:lib_proto_parsing",
         "//tensorflow/core:stream_executor_headers_lib",
