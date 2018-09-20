@@ -1260,6 +1260,9 @@ tensorflow::Status ConvertConv2DHelper(
           << tf_stride[3];
   const nvinfer1::DimsHW stride(tf_stride[h_index], tf_stride[w_index]);
 
+  const auto tf_dilation = attrs.get<std::vector<int>>("dilations");
+  const nvinfer1::DimsHW dilation(tf_dilation[h_index], tf_dilation[w_index]);
+
   std::vector<std::pair<int, int>> padding;
   // TODO(jie): padding.
   if (attrs.get<string>("padding") == "SAME") {
@@ -1294,6 +1297,7 @@ tensorflow::Status ConvertConv2DHelper(
                                     noutput, kernel_size, weights, biases);
   TFTRT_RETURN_ERROR_IF_NULLPTR(layer, node_def.name());
 
+  layer->setDilation(dilation);
   layer->setStride(stride);
   layer->setPadding({padding[0].first, padding[1].first});
   layer->setName(node_def.name().c_str());
@@ -1558,8 +1562,19 @@ tensorflow::Status ConvertActivation(
     const std::vector<TRT_TensorOrWeights>& inputs,
     std::vector<TRT_TensorOrWeights>* outputs) {
   const nvinfer1::ITensor* tensor = inputs.at(0).tensor();
+  nvinfer1::ActivationType type;
+  if (node_def.op() == "Relu") {
+    type = nvinfer1::ActivationType::kRELU;
+  } else if (node_def.op() == "Tanh") {
+    type = nvinfer1::ActivationType::kTANH;
+  } else if (node_def.op() == "Sigmoid") {
+    type = nvinfer1::ActivationType::kSIGMOID;
+  } else {
+    return tensorflow::errors::Unimplemented("Unsupported activation type: ",
+                                             node_def.op());
+  }
   nvinfer1::IActivationLayer* layer = ctx.network()->addActivation(
-      *const_cast<nvinfer1::ITensor*>(tensor), nvinfer1::ActivationType::kRELU);
+      *const_cast<nvinfer1::ITensor*>(tensor), type);
   TFTRT_RETURN_ERROR_IF_NULLPTR(layer, node_def.name());
   nvinfer1::ITensor* output_tensor = layer->getOutput(0);
   outputs->push_back(TRT_TensorOrWeights(output_tensor));
@@ -2627,6 +2642,8 @@ void Converter::register_op_converters() {
   op_registry_["Conv2D"] = ConvertConv2D;
   op_registry_["DepthwiseConv2dNative"] = ConvertConv2DDepthwise;
   op_registry_["Relu"] = ConvertActivation;
+  op_registry_["Tanh"] = ConvertActivation;
+  op_registry_["Sigmoid"] = ConvertActivation;
   op_registry_["MaxPool"] = ConvertPool;
   op_registry_["AvgPool"] = ConvertPool;
   op_registry_["BiasAdd"] = ConvertScale;

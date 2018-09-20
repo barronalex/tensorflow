@@ -92,6 +92,8 @@ bool IsTensorRTCandidate(const tensorflow::Node* node) {
     "MaxPool",
     "BiasAdd",
     "Relu",
+    "Tanh",
+    "Sigmoid",
     "Add",
     "Mul",
     "Sub",
